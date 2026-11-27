@@ -1,6 +1,6 @@
 # Azure App Service / Windows への公開
 
-この手順は **Node.js版** 用です。Python・Linux・gunicornの設定は使用しません。Azure Webアプリの作成完了を確認しました（Windows / Node 24 / Free F1 / Japan East）。掲示板本体の配置とStorage接続は未実施です。
+この手順は **Node.js版** 用です。Python・Linux・gunicornの設定は使用しません。Azure Webアプリの作成完了を確認しました（Windows / Node 24 / Free F1 / Japan East）。GitHub ActionsのOIDC認証とファイル配置が成功しました。現在の公開版は追加Storageを作らず、App Service付属の保存領域を使用します。
 
 ## 1. Webアプリを作成
 
@@ -15,7 +15,13 @@
 
 作成直前の確認画面で、OSがWindows、ランタイムがNode、価格がFreeであることを確認します。有料プランしか使えない場合は先に料金を確認してください。
 
-## 2. Storage
+## 2. 追加Storageを作らない公開構成
+
+利用者が従量課金のStorage作成を希望しなかったため、現在は `STORAGE_MODE` を設定しません。Azure上では `appservice` モードが自動選択され、`%HOME%/data/houkago-lab` に投稿と画像を保存します。SECRET_KEY未設定時は同じ領域の `session-key.txt` に初回だけ生成します。HOME領域が使えない場合は起動を失敗させます。ローカルキャッシュは有効にしません。
+
+この構成で必要なのは既存Windows App ServiceとGitHub接続だけです。以下の独立Storageと環境変数は、将来利用者が追加Storageを選ぶ場合だけのオプションです。
+
+### 任意：独立Storageを使う場合
 
 同じリソースグループにStandard / StorageV2 / LRSのStorageアカウントを作成します。これはApp Service無料枠とは別の従量料金です。匿名Blob公開は無効のまま使用します。アプリは `HoukagoPosts` Tableと非公開コンテナ `post-images` を起動時に作成します。
 
@@ -50,10 +56,10 @@ Windows App Serviceは同梱 `web.config` によりIISNodeから `server.js` を
 
 OIDC接続設定：
 
-1. Microsoft Entraでデプロイ用アプリ登録を作成。クライアントID・テナントIDを控えます。
-2. アプリ登録にGitHub Actionsのフェデレーション資格情報を追加。所有者とリポジトリを指定し、種類はEnvironment、名前は `production`。Subjectは `repo:YOUR-NAME/YOUR-REPO:environment:production`、Audienceは `api://AzureADTokenExchange`。
+1. 既存のユーザー割り当てマネージドID `oidc-msi-961f` を使用。クライアントID・テナントIDを控えます（値そのものはリポジトリに記録しません）。
+2. マネージドIDへGitHub Actionsのフェデレーション資格情報を追加。種類はEnvironment、名前は `production`。新しいリポジトリは所有者IDとリポジトリIDを含む形式を使います。このリポジトリのSubjectは `repo:yuya-8120@282728110/houkago-lab-windows@1473974362:environment:production`、Audienceは `api://AzureADTokenExchange`。
 3. App ServiceのIAMで、そのサービスプリンシパルへWebアプリスコープのWebsite Contributorを割り当てます。学校の管理権限が必要な場合は管理者に依頼します。
-4. GitHubにEnvironment `production` を作成。Actions Secretsへ `AZURE_CLIENT_ID`、`AZURE_TENANT_ID`、`AZURE_SUBSCRIPTION_ID` を設定。
+4. GitHubの公開ジョブはEnvironment `production` を使用。Actions Variablesへ `AZURE_DEPLOY_CONFIG` をJSON形式 `{ "clientId": "ID", "tenantId": "ID", "subscriptionId": "ID" }` で設定します。これらは秘密鍵ではなく接続先の識別子です。パスワードは使わず、OIDCトークンを実行時に取得します。
 5. Actions Variablesへ `AZURE_WEBAPP_NAME` を実際のApp Serviceリソース名で設定。
 6. mainへpushするか、Actionsの `Windows App Service deployment` を手動実行。
 
@@ -73,3 +79,6 @@ App Serviceの「既定のドメイン」をコピーし、トップが表示さ
 - https://learn.microsoft.com/javascript/api/%40azure/data-tables/tableclient
 
 App ServiceやStorageは作成後も利用状況に応じて制限・料金があるため、授業終了後は学校の指示に従って管理してください。
+
+公式の不変識別子の説明：https://docs.github.com/en/actions/reference/security/oidc
+App Serviceの永続ファイル領域：https://learn.microsoft.com/azure/app-service/operating-system-functionality

@@ -40,8 +40,8 @@
 | カテゴリ検索 | 4カテゴリを選び該当投稿を表示 | 実装済み・Windows版の確認結果は検証記録を参照 |
 | キーワード・時間検索 | タイトルと本文の部分一致、10/30/60分の絞り込みを併用 | 実装済み・Windows版の確認結果は検証記録を参照 |
 | 投稿 | タイトル60字・名前20字・本文1200字、カテゴリと時間を検証して保存 | 実装済み・Windows版の確認結果は検証記録を参照 |
-| Table Storage永続化 | Azureモードでは投稿をAzure Table Storageに保存。ローカルモードではローカルJSONファイル | 実装済み・Azure実接続は未実施 |
-| Blob画像投稿・表示 | 5MB以下のJPEG/PNGを検証・縮小・JPEG再変換。非公開BlobをNode.js / Express経由で表示 | 実装済み・Windows版の確認結果は検証記録を参照／Azure実接続は未実施 |
+| Table Storage永続化 | 公開版はApp Service内の永続領域へJSON保存。Table Storageアダプターは実装済みだが、追加費用を避けるため未使用 | 実装済み・Azure実接続は未実施 |
+| Blob画像投稿・表示 | 5MB以下のJPEG/PNGを検証・縮小・JPEG再変換。公開版はApp Service内に保存し、Node.js / Express経由で表示。Blobアダプターは未使用 | 実装済み・Windows版の確認結果は検証記録を参照／Azure実接続は未実施 |
 | 自動デプロイ | mainへのpush時にテストし、OIDCでApp Serviceへデプロイ | 設定ファイル作成済み・GitHub/Azure設定と実行は未実施 |
 | スマホ対応 | 幅に応じた3列・2列・1列表示、フォームの縦配置 | 実装済み |
 | 投稿保護 | CSRFトークン、HTMLエスケープ、画像実体検証、個人情報を載せない同意欄 | 実装済み |
@@ -50,4 +50,4 @@
 GitHubリポジトリのURL：https://github.com/yuya-8120/houkago-lab-windows （Public）
 
 
-実装方式の変更：学校指定のWindows版App Serviceへ対応するため、公開版はNode.js / Expressで実装する。Flask版は別フォルダーに保管。Python/FlaskのWindows版App Serviceは公式サポート対象外。Azure App Service（Windows / Node 24 / Free F1 / Japan East）の作成完了を確認。掲示板本体の配置・Storage接続・GitHub自動デプロイは未実施。
+実装方式の変更：学校指定のWindows版App Serviceへ対応するため、公開版はNode.js / Expressで実装する。Flask版は別フォルダーに保管。Python/FlaskのWindows版App Serviceは公式サポート対象外。Azure App Service（Windows / Node 24 / Free F1 / Japan East）の作成完了を確認。GitHub ActionsのOIDC認証とAzureへの配置は成功。追加のStorageは作成しないという利用者の希望に合わせ、公開版をApp Service内の永続保存へ変更。Table/Blobの実接続は未実施。

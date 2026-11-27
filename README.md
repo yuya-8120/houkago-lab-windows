@@ -18,14 +18,14 @@ npm start
 
 ## 公開と提出
 
-`AZURE公開手順.md` を参照。**まだAzure公開と実Storage接続は行っていません。** 氏名・クラス・出席番号・URLは `requirements.md` の欄へ記入します。以前のPython版の公開手順や `gunicorn` コマンドはこの版には使いません。
+`AZURE公開手順.md` を参照。Azureへのファイル配置とOIDC認証は成功しました。公開画面の最終確認状況は `公開状況.md` を参照してください。追加のStorageアカウントは利用者の希望で作成していません。 氏名・クラス・出席番号・URLは `requirements.md` の欄へ記入します。以前のPython版の公開手順や `gunicorn` コマンドはこの版には使いません。
 
 ## 設定と保存
 
-`.env.example` を `.env` にコピーするとローカルでもAzure接続を試せます。接続文字列、SECRET_KEYは `.env` またはApp Serviceの環境変数で設定し、GitHubへ追加しません。ローカルは `instance/` に1投稿1ファイルのJSONと画像を保存し、再起動しても残ります。AzureではTable Storageと非公開Blobを使い、画像はアプリを通して表示します。
+`.env.example` を `.env` にコピーするとローカルでもAzure接続を試せます。接続文字列、SECRET_KEYは `.env` またはApp Serviceの環境変数で設定し、GitHubへ追加しません。ローカルは `instance/` に1投稿1ファイルのJSONと画像を保存し、再起動しても残ります。公開版はApp Serviceの `%HOME%/data/houkago-lab` に投稿JSONと画像を保存し、画像はアプリを通して表示します。Webルートや配置ZIPとは分離され、セッション用のランダム鍵も同じ領域へ初回生成して保持します。追加Storageの従量料金を避ける選択のため、公開版ではTable/Blobを使いません。明示的に `STORAGE_MODE=azure` を設定した場合だけTable/Blobアダプターを利用できます。
 
 画像はJPEG/PNG、5MB・2000万画素以下。保存時は最大1600pxのJPEGに再変換し、元画像のメタデータを引き継ぎません。Windows無料プランの環境差を抑えるため、画像処理はJimpを使用しています。WebPはこの版では対象外です。
 
 `npm test` で投稿・複合検索・画像の保存表示・入力検証・再読込後の保持・Azure SDKアダプターを確認できます。SDKテストはモックで、Azureへの実接続確認ではありません。
 
-ログイン、編集、削除、返信、通報、管理画面、スパム対策、ページ分割は未実装です。Tableを一覧取得する授業用の少量データ向け試作です。ローカルJSON保存はAzure本番では利用せず、起動時にAzureモードを必須チェックします。
+ログイン、編集、削除、返信、通報、管理画面、スパム対策、ページ分割は未実装です。Tableを一覧取得する授業用の少量データ向け試作です。Azure上では `appservice` モードを自動選択し、App ServiceのHOME領域を使用します。`STORAGE_MODE=local` を明示したAzure起動は拒否します。無料プランの容量・CPU制限内での授業用運用です。追加Storageは作成しませんが、既存のAzure契約全体の費用をゼロと保証するものではありません。
