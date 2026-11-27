@@ -67,11 +67,28 @@ function urlFor(endpoint,args={}) {
 }
 
 async function createApp(options={}) {
-  const mode=options.mode||process.env.STORAGE_MODE||'local';
-  if(!['local','azure'].includes(mode)) throw new Error('Invalid STORAGE_MODE');
-  const secret=options.secret||process.env.SECRET_KEY;
-  if(process.env.WEBSITE_SITE_NAME && (mode!=='azure'||!secret)) throw new Error('Azure requires STORAGE_MODE=azure and SECRET_KEY');
-  const store=options.store||(mode==='azure'?new AzureStore(process.env.AZURE_STORAGE_CONNECTION_STRING):new LocalStore(options.folder||path.join(__dirname,'instance')));
+  const hosted=Boolean(process.env.WEBSITE_SITE_NAME);
+  const mode=options.mode||process.env.STORAGE_MODE||(hosted?'appservice':'local');
+  if(!['local','azure','appservice'].includes(mode)) throw new Error('Invalid STORAGE_MODE');
+  let secret=options.secret||process.env.SECRET_KEY;
+  if(hosted && mode==='local') throw new Error('Use persistent App Service storage or Azure storage when hosted');
+  if(hosted && mode==='azure'&&!secret) throw new Error('Azure storage mode requires SECRET_KEY');
+  let folder=options.folder||path.join(__dirname,'instance');
+  if(mode==='appservice') {
+    const home=options.home||process.env.HOME;
+    if(!home) throw new Error('App Service HOME is required for persistent storage');
+    if(process.env.WEBSITE_LOCAL_CACHE_OPTION==='Always') throw new Error('Local cache must be disabled for persistent App Service data');
+    folder=path.join(home,'data','houkago-lab');
+    await fs.mkdir(folder,{recursive:true});
+    if(!secret) {
+      const keyPath=path.join(folder,'session-key.txt');
+      try {await fs.writeFile(keyPath,crypto.randomBytes(32).toString('hex'),{flag:'wx',mode:0o600});}
+      catch(e) {if(e.code!=='EEXIST') throw e;}
+      secret=await fs.readFile(keyPath,'utf8');
+      if(!/^[a-f0-9]{64}$/.test(secret)) throw new Error('Invalid persisted session key');
+    }
+  }
+  const store=options.store||(mode==='azure'?new AzureStore(process.env.AZURE_STORAGE_CONNECTION_STRING):new LocalStore(folder));
   await store.init();
   const app=express();
   app.disable('x-powered-by');
@@ -85,7 +102,7 @@ async function createApp(options={}) {
     next();
   });
   app.use('/static',express.static(path.join(__dirname,'static')));
-  app.use(cookieSession({name:'lab',keys:[secret||crypto.randomBytes(32).toString('hex')],httpOnly:true,sameSite:'lax',secure:process.env.COOKIE_SECURE==='1',maxAge:86400000}));
+  app.use(cookieSession({name:'lab',keys:[secret||crypto.randomBytes(32).toString('hex')],httpOnly:true,sameSite:'lax',secure:process.env.COOKIE_SECURE==='1'||hosted,maxAge:86400000}));
   app.use((req,res,next)=>{
     req.session.csrf ||= crypto.randomBytes(32).toString('hex');
     res.locals={...res.locals,categories,category_entries:Object.entries(categories),symbols,minutes_options:[10,30,60],csrf:req.session.csrf,messages:[]};

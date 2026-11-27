@@ -67,3 +67,18 @@ test('Azure adapter invokes Table/Blob contracts (mock only)',async()=>{
   await store.upload('a.jpg',Buffer.from('test'));assert.equal(blobName,'a.jpg');
   assert.equal((await store.image('a.jpg')).toString(),'test');await store.removeImage('a.jpg');assert.equal(deleted,'a.jpg');
 });
+
+test('App Service built-in storage and session key persist outside deployment folder',async()=>{
+  const home=await fs.mkdtemp(path.join(os.tmpdir(),'lab-home-'));
+  try {
+    const first=await createApp({mode:'appservice',home});
+    const keyPath=path.join(home,'data','houkago-lab','session-key.txt');
+    const firstKey=await fs.readFile(keyPath,'utf8');
+    assert.match(firstKey,/^[a-f0-9]{64}$/);
+    await first.locals.store.add({id:'a'.repeat(32),title:'persisted',image:''});
+    const second=await createApp({mode:'appservice',home});
+    assert.equal(await fs.readFile(keyPath,'utf8'),firstKey);
+    assert.equal((await second.locals.store.list())[0].title,'persisted');
+    await assert.rejects(createApp({mode:'appservice',home,folder:'ignored',store:{init:async()=>{throw new Error('storage failure')}}}),/storage failure/);
+  } finally {await fs.rm(home,{recursive:true,force:true});}
+});
