@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+.env.*
+!.env.example
+instance/
+*.publishsettings
+*.zip
+*.log
+node_modules/
+iisnode/

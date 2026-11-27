@@ -1,0 +1,5 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#304ae8"><meta name="description" content="高校生の、ちょっとやってみたを持ち寄る掲示板。10分から始める放課後ラボ。"><title>{% block title %}放課後ラボ — 好きの、その先へ。{% endblock %}</title><link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}"><script src="{{ url_for('static',filename='app.js') }}" defer></script></head>
+<body><a class="skip" href="#main">本文へ移動</a><header class="header"><a href="/" class="brand"><span class="brand-icon">放</span>放課後ラボ<span class="brand-en">HOUKAGO LAB</span></a><nav aria-label="メイン"><a href="/" class="nav-explore">みんなの発見</a><a class="button small" href="/new">＋ 投稿する</a></nav></header>
+<main id="main">{% for message in messages %}<div class="notice" role="status">{{ message }}</div>{% endfor %}{% block content %}{% endblock %}</main>
+<footer><a class="footer-brand" href="/">放課後ラボ</a><p>小さな「やってみた」が、次の自分をつくる。</p><span>高校生のためのアイデア掲示板 · 課題制作サイト</span></footer></body></html>
