@@ -22,7 +22,7 @@ jobs:
       - run: npm prune --omit=dev
       - name: Package Windows dependencies and application
         shell: pwsh
-        run: Compress-Archive -Path server.js,web.config,package.json,package-lock.json,views,static,node_modules -DestinationPath release.zip
+        run: Compress-Archive -Path server.js,app.js,web.config,package.json,package-lock.json,views,static,node_modules -DestinationPath release.zip
       - uses: actions/upload-artifact@v4
         with:
           name: windows-app

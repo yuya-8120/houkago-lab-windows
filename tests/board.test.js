@@ -5,7 +5,7 @@ const os=require('node:os');
 const path=require('node:path');
 const {once}=require('node:events');
 const {Jimp}=require('jimp');
-const {createApp,LocalStore,AzureStore}=require('../server');
+const {createApp,LocalStore,AzureStore}=require('../app');
 
 test('Windows board: create, search, escaping, persistence, image, validation',async()=>{
   const folder=await fs.mkdtemp(path.join(os.tmpdir(),'lab-win-'));

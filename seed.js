@@ -1,4 +1,4 @@
-const {createApp}=require('./server');
+const {createApp}=require('./app');
 const crypto=require('node:crypto');
 (async()=>{
   if((process.env.STORAGE_MODE||'local')!=='local') throw new Error('Local mode only');
